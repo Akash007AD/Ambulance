@@ -1,20 +1,21 @@
 const express = require('express');
 const router = express.Router();
-const userController = require('../controllers/userController'); // Ensure this path is correct based on your project structure
+const userController = require('../controllers/userController'); // Ensure this path is correct
 
-// Route for registering a new user
+// User Registration
 router.post('/register', userController.registerUser);
 
-// Route for sending OTP to user's phone number for login
-router.post('/login/otp', userController.otpLogin);
+// OTP Login
+router.post('/otp-login', userController.otpLogin);
 
-// Route for verifying OTP and logging the user in
-router.post('/login/otp/verify', userController.verifyOtp);
+// Verify OTP
+router.post('/verify-otp', userController.verifyOtp);
 
-// Route for updating user location
-router.post('/location/update', userController.updateLocation);
+// Update User Location
+router.put('/update-location', userController.updateLocation);
 
-// Route for logging out the user
+// Logout
 router.post('/logout', userController.logout);
 
+// Export the router
 module.exports = router;

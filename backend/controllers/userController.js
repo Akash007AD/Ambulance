@@ -1,14 +1,15 @@
 const mongoose = require('mongoose');
 const User = require('../models/user'); // Ensure this path is correct based on your project structure
 const { sendOtp, verifyOtp, clearOtp } = require('../utils/otpService'); // OTP service functions
+const bcrypt = require('bcryptjs');
 
 // Register a new user
 exports.registerUser = async (req, res) => {
-    const { name, phoneNumber } = req.body;
+    const { name, phoneNumber, password } = req.body;
 
     // Validate input
-    if (!name || !phoneNumber) {
-        return res.status(400).json({ message: 'Name and phone number are required' });
+    if (!name || !phoneNumber || !password) {
+        return res.status(400).json({ message: 'Name, phone number, and password are required' });
     }
 
     try {
@@ -19,7 +20,7 @@ exports.registerUser = async (req, res) => {
         }
 
         // Create a new user
-        const newUser = new User({ name, phoneNumber });
+        const newUser = new User({ name, phoneNumber, password });
         await newUser.save();
 
         res.status(201).json({ message: 'User registered successfully', user: newUser });
@@ -41,7 +42,6 @@ exports.otpLogin = async (req, res) => {
     try {
         // Send OTP to the user
         await sendOtp(phoneNumber);
-
         res.status(200).json({ message: 'OTP sent successfully to ' + phoneNumber });
     } catch (error) {
         console.error('Error sending OTP:', error.message);
@@ -63,12 +63,10 @@ exports.verifyOtp = async (req, res) => {
         const isVerified = verifyOtp(phoneNumber, otp);
 
         if (isVerified) {
-            // OTP verified successfully, proceed to login
-            // Optionally, check if the user exists or register them automatically
+            // OTP verified successfully, check if the user exists
             let user = await User.findOne({ phoneNumber });
             if (!user) {
-                user = new User({ phoneNumber });
-                await user.save();
+                return res.status(404).json({ message: 'User not found' });
             }
 
             // Clear OTP after successful verification
@@ -106,6 +104,9 @@ exports.updateLocation = async (req, res) => {
             return res.status(404).json({ message: 'User not found' });
         }
 
+        // Emit location update if using socket.io
+        // io.emit('locationUpdated', { userId: user._id, latitude, longitude });
+
         res.status(200).json({ message: 'Location updated successfully', user });
     } catch (error) {
         console.error('Error updating location:', error.message);
@@ -125,11 +126,11 @@ exports.logout = async (req, res) => {
     });
 };
 
-// // Export all controllers
+// Export all controllers
 // module.exports = {
 //     registerUser,
 //     otpLogin,
 //     verifyOtp,
 //     updateLocation,
-//     logout
+//     logout,
 // };
